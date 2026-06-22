@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sales Leads - Antique Stores</title>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; }
+        tr.lead-row { cursor: pointer; }
+        .filter-dropdown { position: relative; display: inline-block; }
+        .filter-dropdown .panel { display: none; }
+        .filter-dropdown.open .panel { display: block; }
+        .badge { font-size: 0.8rem; font-weight: 600; }
+        .new { color: #64748b; }
+        .contacted { color: #2563eb; }
+        .qualified { color: #d97706; }
+        .won { color: #16a34a; }
+        .lost { color: #dc2626; }
+        .closed { color: #475569; }
+        .rating-text { font-size: 0.8rem; font-weight: 600; }
+        .rating-A { color: #16a34a; }
+        .rating-B { color: #2563eb; }
+        .rating-C { color: #d97706; }
+        .rating-D { color: #dc2626; }
+        .rating-not_contacted { color: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+    <div class="max-w-[1400px] mx-auto px-6 py-8">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">Sales Leads</h1>
+                <p class="text-sm text-slate-500">Antique Stores &mdash; {{ total_count }} total</p>
+            </div>
+            <div class="flex items-center gap-4 text-sm">
+                <span class="text-slate-500">{{ request.user.email }}</span>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="text-indigo-600 hover:text-indigo-800 font-medium">Sign out</button>
+                </form>
+            </div>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 rounded-lg border px-4 py-3 text-sm
+                            {% if message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-700
+                            {% elif message.tags == 'warning' %}border-amber-200 bg-amber-50 text-amber-700
+                            {% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="mb-5 flex items-center gap-3">
+            <a href="{% url 'leads:create' %}"
+               class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition">
+                + Add Lead
+            </a>
+            <button type="button" id="build-route-btn"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition">
+                Build Route from Selected
+            </button>
+            <button type="button" id="toggle-location-route-btn"
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition">
+                Build Route by Location
+            </button>
+        </div>
+
+        <form method="get" action="{% url 'leads:route_by_location' %}" id="location-route-form"
+              class="hidden mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm flex flex-wrap items-end gap-3">
+            <div>
+                <label for="route_city" class="block text-sm font-medium text-slate-700 mb-1">Starting City</label>
+                <input type="text" name="city" id="route_city" placeholder="e.g. Nashville"
+                       class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="route_state" class="block text-sm font-medium text-slate-700 mb-1">Starting State</label>
+                <input type="text" name="state" id="route_state" placeholder="e.g. Tennessee"
+                       class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+            </div>
+            <span class="pb-2 text-sm font-medium text-slate-400">or</span>
+            <div>
+                <label for="route_zip" class="block text-sm font-medium text-slate-700 mb-1">Zip Code</label>
+                <input type="text" name="zip" id="route_zip" placeholder="e.g. 38401"
+                       class="w-28 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="route_radius" class="block text-sm font-medium text-slate-700 mb-1">Radius (miles)</label>
+                <input type="number" name="radius" id="route_radius" required min="1" step="1" value="25"
+                       class="w-28 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="route_max_stops" class="block text-sm font-medium text-slate-700 mb-1">Max Stops</label>
+                <input type="number" name="max_stops" id="route_max_stops" min="1" step="1" max="500" placeholder="500"
+                       class="w-28 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+            </div>
+            <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition">
+                Find Stores &amp; Build Route
+            </button>
+        </form>
+
+        <form class="filters bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 flex flex-wrap gap-3 items-center"
+              method="get"
+              hx-get="{% url 'leads:list' %}" hx-target="#results" hx-swap="innerHTML"
+              hx-trigger="change delay:300ms, submit" hx-push-url="true">
+            <div class="filter-dropdown" id="state-dropdown">
+                <button type="button" class="toggle min-w-[140px] text-left rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:border-indigo-400 transition" id="state-toggle">
+                    {% if states_selected %}{{ states_selected|length }} state{{ states_selected|length|pluralize }} selected{% else %}All states{% endif %}
+                </button>
+                <div class="panel absolute z-10 mt-1 max-h-64 min-w-[220px] overflow-y-auto rounded-lg border border-slate-200 bg-white p-2 shadow-lg">
+                    {% for s in states %}
+                        <label class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer whitespace-nowrap">
+                            <input type="checkbox" name="state" value="{{ s }}" {% if s in states_selected %}checked{% endif %} class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                            {{ s }}
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% include "leads/_city_dropdown.html" %}
+            <select name="has_email" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:border-indigo-400 transition">
+                <option value="">Email status</option>
+                <option value="yes" {% if has_email == "yes" %}selected{% endif %}>Has email on file</option>
+                <option value="no" {% if has_email == "no" %}selected{% endif %}>Missing email</option>
+            </select>
+            <select name="has_website" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:border-indigo-400 transition">
+                <option value="">Website status</option>
+                <option value="yes" {% if has_website == "yes" %}selected{% endif %}>Has website on file</option>
+                <option value="no" {% if has_website == "no" %}selected{% endif %}>Missing website</option>
+            </select>
+            <select name="has_phone" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:border-indigo-400 transition">
+                <option value="">Phone status</option>
+                <option value="yes" {% if has_phone == "yes" %}selected{% endif %}>Has phone on file</option>
+                <option value="no" {% if has_phone == "no" %}selected{% endif %}>Missing phone</option>
+            </select>
+            <div class="filter-dropdown" id="category-dropdown">
+                <button type="button" class="toggle min-w-[140px] text-left rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:border-indigo-400 transition" id="category-toggle">
+                    {% if categories_selected %}{{ categories_selected|length }} categor{{ categories_selected|length|pluralize:"y,ies" }} selected{% else %}All categories{% endif %}
+                </button>
+                <div class="panel absolute z-10 mt-1 max-h-64 min-w-[220px] overflow-y-auto rounded-lg border border-slate-200 bg-white p-2 shadow-lg">
+                    {% for c in categories %}
+                        <label class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer whitespace-nowrap">
+                            <input type="checkbox" name="category" value="{{ c }}" {% if c in categories_selected %}checked{% endif %} class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                            {{ c }}
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="filter-dropdown" id="status-dropdown">
+                <button type="button" class="toggle min-w-[140px] text-left rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:border-indigo-400 transition" id="status-toggle">
+                    {% if statuses_selected %}{{ statuses_selected|length }} status{{ statuses_selected|length|pluralize:"es" }} selected{% else %}All statuses{% endif %}
+                </button>
+                <div class="panel absolute z-10 mt-1 max-h-64 min-w-[200px] overflow-y-auto rounded-lg border border-slate-200 bg-white p-2 shadow-lg">
+                    {% for value, label in status_choices %}
+                        <label class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer whitespace-nowrap">
+                            <input type="checkbox" name="status" value="{{ value }}" {% if value in statuses_selected %}checked{% endif %} class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                            {{ label }}
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="filter-dropdown" id="rating-dropdown">
+                <button type="button" class="toggle min-w-[140px] text-left rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:border-indigo-400 transition" id="rating-toggle">
+                    {% if ratings_selected %}{{ ratings_selected|length }} rating{{ ratings_selected|length|pluralize }} selected{% else %}All ratings{% endif %}
+                </button>
+                <div class="panel absolute z-10 mt-1 max-h-64 min-w-[220px] overflow-y-auto rounded-lg border border-slate-200 bg-white p-2 shadow-lg">
+                    {% for value, label in rating_choices %}
+                        <label class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer whitespace-nowrap">
+                            <input type="checkbox" name="rating" value="{{ value }}" {% if value in ratings_selected %}checked{% endif %} class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                            {{ label }}
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            <input type="hidden" name="sort" value="{{ sort }}">
+            <a href="{% url 'leads:list' %}" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">Clear filters</a>
+        </form>
+
+        <div id="results">
+            {% include "leads/_lead_list_results.html" %}
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('change', function (e) {
+            if (e.target.classList.contains('city-search-input')) {
+                e.stopPropagation();
+            }
+        }, true);
+
+        document.addEventListener('change', function (e) {
+            if (e.target.id === 'select-all-checkbox') {
+                document.querySelectorAll('.route-checkbox').forEach(function (checkbox) {
+                    checkbox.checked = e.target.checked;
+                });
+                return;
+            }
+            if (e.target.classList.contains('route-checkbox') && !e.target.checked) {
+                const selectAll = document.getElementById('select-all-checkbox');
+                if (selectAll) selectAll.checked = false;
+            }
+        });
+
+        document.addEventListener('input', function (e) {
+            if (!e.target.classList.contains('city-search-input')) return;
+            const query = e.target.value.trim().toLowerCase();
+            const panel = e.target.closest('#city-panel');
+            if (!panel) return;
+            panel.querySelectorAll('.city-group').forEach(function (group) {
+                let anyVisible = false;
+                group.querySelectorAll('.city-option').forEach(function (option) {
+                    const matches = option.textContent.toLowerCase().includes(query);
+                    option.style.display = matches ? '' : 'none';
+                    if (matches) anyVisible = true;
+                });
+                group.style.display = anyVisible ? '' : 'none';
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            const row = e.target.closest('tr.lead-row');
+            if (row && !e.target.closest('a') && !e.target.closest('form') && !e.target.closest('.route-cell')) {
+                window.location.href = row.dataset.href;
+                return;
+            }
+
+            const toggle = e.target.closest('.filter-dropdown .toggle');
+            if (toggle) {
+                e.stopPropagation();
+                const dropdown = toggle.closest('.filter-dropdown');
+                document.querySelectorAll('.filter-dropdown').forEach(function (other) {
+                    if (other !== dropdown) other.classList.remove('open');
+                });
+                dropdown.classList.toggle('open');
+                return;
+            }
+            document.querySelectorAll('.filter-dropdown.open').forEach(function (dropdown) {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('open');
+                }
+            });
+        });
+
+        document.getElementById('build-route-btn').addEventListener('click', function () {
+            const checked = document.querySelectorAll('.route-checkbox:checked');
+            if (!checked.length) {
+                alert('Check at least one lead to build a route.');
+                return;
+            }
+            const params = new URLSearchParams();
+            checked.forEach(function (checkbox) {
+                params.append('lead_ids', checkbox.dataset.pk);
+            });
+            params.append('back', window.location.search);
+            window.location.href = '{% url "leads:route" %}?' + params.toString();
+        });
+
+        document.getElementById('toggle-location-route-btn').addEventListener('click', function () {
+            document.getElementById('location-route-form').classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>

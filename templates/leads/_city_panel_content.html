@@ -1,0 +1,18 @@
+{% if states_selected %}
+    <input type="text" class="city-search-input mb-2 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" placeholder="Search cities&hellip;">
+    <div class="city-options">
+        {% for state_name, city_list in cities_by_state.items %}
+            <div class="city-group">
+                <div class="city-group-header px-2 pt-2 pb-1 text-xs font-semibold text-slate-400 uppercase tracking-wide border-t border-slate-100">{{ state_name }}</div>
+                {% for c in city_list %}
+                    <label class="city-option flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer whitespace-nowrap">
+                        <input type="checkbox" name="city" value="{{ c }}" {% if c in cities_selected %}checked{% endif %} class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        {{ c }}
+                    </label>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="px-2 py-1.5 text-sm text-slate-400">Select a state first</div>
+{% endif %}

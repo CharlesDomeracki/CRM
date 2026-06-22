@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign in - Sales Leads CRM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-600 to-slate-900">
+    <div class="w-full max-w-sm mx-6 rounded-2xl bg-white p-8 shadow-xl">
+        <h1 class="text-xl font-bold text-slate-900 mb-1">Sales Leads CRM</h1>
+        <p class="text-sm text-slate-500 mb-6">Sign in to manage your leads</p>
+
+        {% if form.errors %}
+            <div class="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                Invalid email address or password.
+            </div>
+        {% endif %}
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label for="id_username" class="block text-sm font-medium text-slate-700 mb-1">Email address</label>
+                <input type="email" name="username" id="id_username" autofocus required
+                       class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="id_password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <input type="password" name="password" id="id_password" required
+                       class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+            </div>
+            <input type="hidden" name="next" value="{{ next }}">
+            <button type="submit" class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition">Sign in</button>
+        </form>
+    </div>
+</body>
+</html>

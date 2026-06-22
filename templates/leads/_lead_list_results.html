@@ -1,0 +1,81 @@
+<div class="flex items-center justify-between mb-3">
+    <p class="text-sm text-slate-500">
+        Showing <span class="font-medium text-slate-700">{{ page_obj.start_index }}&ndash;{{ page_obj.end_index }}</span> of
+        <span class="font-medium text-slate-700">{{ total_count }}</span> matching leads
+    </p>
+    <div class="flex items-center gap-3">
+        <p class="text-xs text-slate-400">Use the admin for bulk management.</p>
+        {% if page_obj.has_next %}
+            <a href="?{{ pagination_qs }}&page={{ page_obj.next_page_number }}" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">Next &rsaquo;</a>
+            <a href="?{{ pagination_qs }}&page={{ page_obj.paginator.num_pages }}" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">Last &raquo;</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <th class="px-4 py-3">
+                    <input type="checkbox" id="select-all-checkbox" title="Select all on this page" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                </th>
+                <th class="px-4 py-3">Name</th>
+                <th class="px-4 py-3">City</th>
+                <th class="px-4 py-3">State</th>
+                <th class="px-4 py-3">Phone</th>
+                <th class="px-4 py-3">Email</th>
+                <th class="px-4 py-3">Website</th>
+                <th class="px-4 py-3">Category</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3">Rating</th>
+                <th class="px-4 py-3">Contact Date</th>
+                <th class="px-4 py-3">Follow-up</th>
+                <th class="px-4 py-3">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+        {% for lead in leads %}
+            <tr class="lead-row hover:bg-indigo-50/60 transition" data-href="{% url 'leads:detail' lead.pk %}?{{ detail_link_qs }}">
+                <td class="px-4 py-3 route-cell">
+                    <input type="checkbox" class="route-checkbox rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" data-pk="{{ lead.pk }}">
+                </td>
+                <td class="px-4 py-3 font-medium text-slate-800">{{ lead.name }}</td>
+                <td class="px-4 py-3 text-slate-600">{{ lead.city }}</td>
+                <td class="px-4 py-3 text-slate-600">{{ lead.state }}</td>
+                <td class="px-4 py-3 text-slate-600 whitespace-nowrap">{{ lead.phone }}</td>
+                <td class="px-4 py-3 text-slate-600">{% if lead.email %}Yes{% else %}No{% endif %}</td>
+                <td class="px-4 py-3 text-slate-600">{% if lead.url %}Yes{% else %}No{% endif %}</td>
+                <td class="px-4 py-3 text-slate-600">{{ lead.primary_category_name }}</td>
+                <td class="px-4 py-3"><span class="badge {{ lead.status }}">{{ lead.get_status_display }}</span></td>
+                <td class="px-4 py-3"><span class="rating-text rating-{{ lead.conversion_rating }}">{{ lead.get_conversion_rating_display }}</span></td>
+                <td class="px-4 py-3 text-slate-600">{{ lead.contact_date|default:"" }}</td>
+                <td class="px-4 py-3 text-slate-600">{{ lead.followup_date|default:"" }}</td>
+                <td class="px-4 py-3">
+                    <form method="post" action="{% url 'leads:delete' lead.pk %}?{{ pagination_qs }}&page={{ page_obj.number }}" onsubmit="return confirm('Delete {{ lead.name|escapejs }}?');">
+                        {% csrf_token %}
+                        <button type="submit" class="rounded-md bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-4 flex items-center justify-between text-sm">
+    <div class="flex items-center gap-2">
+        {% if page_obj.has_previous %}
+            <a href="?{{ pagination_qs }}&page=1" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-slate-600 hover:bg-slate-50">&laquo; First</a>
+            <a href="?{{ pagination_qs }}&page={{ page_obj.previous_page_number }}" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-slate-600 hover:bg-slate-50">&lsaquo; Prev</a>
+        {% endif %}
+        <span class="px-3 py-1.5 font-medium text-slate-700">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    </div>
+    <div class="flex items-center gap-2">
+        {% if page_obj.has_next %}
+            <a href="?{{ pagination_qs }}&page={{ page_obj.next_page_number }}" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-slate-600 hover:bg-slate-50">Next &rsaquo;</a>
+            <a href="?{{ pagination_qs }}&page={{ page_obj.paginator.num_pages }}" class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-slate-600 hover:bg-slate-50">Last &raquo;</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if is_partial %}{% include "leads/_city_dropdown_oob.html" %}{% endif %}
