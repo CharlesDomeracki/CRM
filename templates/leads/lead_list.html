@@ -139,6 +139,11 @@
                 <option value="yes" {% if in_mall == "yes" %}selected{% endif %}>In a mall</option>
                 <option value="no" {% if in_mall == "no" %}selected{% endif %}>Not in a mall</option>
             </select>
+            <select name="has_hours" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:border-indigo-400 transition">
+                <option value="">Hours status</option>
+                <option value="yes" {% if has_hours == "yes" %}selected{% endif %}>Has hours on file</option>
+                <option value="no" {% if has_hours == "no" %}selected{% endif %}>Missing hours</option>
+            </select>
             <div class="filter-dropdown" id="category-dropdown">
                 <button type="button" class="toggle min-w-[140px] text-left rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:border-indigo-400 transition" id="category-toggle">
                     {% if categories_selected %}{{ categories_selected|length }} categor{{ categories_selected|length|pluralize:"y,ies" }} selected{% else %}All categories{% endif %}

@@ -68,6 +68,17 @@ def lead_list(request):
     elif in_mall == "no":
         leads = leads.filter(in_mall=False)
 
+    has_hours = request.GET.get("has_hours", "").strip()
+    hour_fields = ["monday_hours", "tuesday_hours", "wednesday_hours", "thursday_hours", "friday_hours", "saturday_hours", "sunday_hours"]
+    if has_hours == "yes":
+        from django.db.models import Q
+        q = Q()
+        for f in hour_fields:
+            q |= ~Q(**{f: ""})
+        leads = leads.filter(q)
+    elif has_hours == "no":
+        leads = leads.filter(**{f: "" for f in hour_fields})
+
     sort = request.GET.get("sort", "").strip()
     if sort == "rating":
         leads = leads.order_by("star_count")
@@ -99,7 +110,7 @@ def lead_list(request):
     page_obj = paginator.get_page(page_number)
 
     detail_link_qs = urlencode(
-        [("q", query), ("sort", sort), ("page", page_obj.number), ("has_email", has_email), ("has_website", has_website), ("has_phone", has_phone), ("in_mall", in_mall)]
+        [("q", query), ("sort", sort), ("page", page_obj.number), ("has_email", has_email), ("has_website", has_website), ("has_phone", has_phone), ("in_mall", in_mall), ("has_hours", has_hours)]
         + [("status_filter", s) for s in statuses_selected]
         + [("state_filter", s) for s in states_selected]
         + [("city_filter", c) for c in cities_selected]
@@ -107,7 +118,7 @@ def lead_list(request):
         + [("rating", r) for r in ratings_selected]
     )
     filters_qs = urlencode(
-        [("q", query), ("has_email", has_email), ("has_website", has_website), ("has_phone", has_phone), ("in_mall", in_mall)]
+        [("q", query), ("has_email", has_email), ("has_website", has_website), ("has_phone", has_phone), ("in_mall", in_mall), ("has_hours", has_hours)]
         + [("status", s) for s in statuses_selected]
         + [("state", s) for s in states_selected]
         + [("city", c) for c in cities_selected]
@@ -115,7 +126,7 @@ def lead_list(request):
         + [("rating", r) for r in ratings_selected]
     )
     pagination_qs = urlencode(
-        [("q", query), ("sort", sort), ("has_email", has_email), ("has_website", has_website), ("has_phone", has_phone), ("in_mall", in_mall)]
+        [("q", query), ("sort", sort), ("has_email", has_email), ("has_website", has_website), ("has_phone", has_phone), ("in_mall", in_mall), ("has_hours", has_hours)]
         + [("status", s) for s in statuses_selected]
         + [("state", s) for s in states_selected]
         + [("city", c) for c in cities_selected]
@@ -143,6 +154,7 @@ def lead_list(request):
             "has_website": has_website,
             "has_phone": has_phone,
             "in_mall": in_mall,
+            "has_hours": has_hours,
             "states": [s for s in states if s],
             "cities_by_state": cities_by_state,
             "categories": [c for c in categories if c],
