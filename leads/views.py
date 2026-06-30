@@ -3,6 +3,7 @@ from urllib.parse import quote, urlencode
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -71,7 +72,6 @@ def lead_list(request):
     has_hours = request.GET.get("has_hours", "").strip()
     hour_fields = ["monday_hours", "tuesday_hours", "wednesday_hours", "thursday_hours", "friday_hours", "saturday_hours", "sunday_hours"]
     if has_hours == "yes":
-        from django.db.models import Q
         q = Q()
         for f in hour_fields:
             q |= ~Q(**{f: ""})
@@ -87,10 +87,14 @@ def lead_list(request):
     else:
         leads = leads.order_by("state", "city")
 
-    states = Lead.objects.order_by("state").values_list("state", flat=True).distinct()
+    states = (
+        Lead.objects.exclude(state="")
+        .values("state")
+        .annotate(count=Count("id"))
+        .order_by("state")
+    )
     cities_by_state = {}
     if states_selected:
-        from django.db.models import Count
         state_city_counts = (
             Lead.objects.filter(state__in=states_selected)
             .exclude(city="")
@@ -156,7 +160,7 @@ def lead_list(request):
             "has_phone": has_phone,
             "in_mall": in_mall,
             "has_hours": has_hours,
-            "states": [s for s in states if s],
+            "states": [(row["state"], row["count"]) for row in states],
             "cities_by_state": cities_by_state,
             "categories": [c for c in categories if c],
             "status_choices": Lead.STATUS_CHOICES,

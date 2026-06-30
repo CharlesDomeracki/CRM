@@ -110,10 +110,10 @@
                     {% if states_selected %}{{ states_selected|length }} state{{ states_selected|length|pluralize }} selected{% else %}All states{% endif %}
                 </button>
                 <div class="panel absolute z-10 mt-1 max-h-64 min-w-[220px] overflow-y-auto rounded-lg border border-slate-200 bg-white p-2 shadow-lg">
-                    {% for s in states %}
+                    {% for s, count in states %}
                         <label class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-100 cursor-pointer whitespace-nowrap">
                             <input type="checkbox" name="state" value="{{ s }}" {% if s in states_selected %}checked{% endif %} class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
-                            {{ s }}
+                            {{ s }} <span class="text-slate-400">({{ count }})</span>
                         </label>
                     {% endfor %}
                 </div>
