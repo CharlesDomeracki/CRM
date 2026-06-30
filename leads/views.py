@@ -90,15 +90,16 @@ def lead_list(request):
     states = Lead.objects.order_by("state").values_list("state", flat=True).distinct()
     cities_by_state = {}
     if states_selected:
-        state_city_pairs = (
+        from django.db.models import Count
+        state_city_counts = (
             Lead.objects.filter(state__in=states_selected)
             .exclude(city="")
+            .values("state", "city")
+            .annotate(count=Count("id"))
             .order_by("state", "city")
-            .values_list("state", "city")
-            .distinct()
         )
-        for state_name, city_name in state_city_pairs:
-            cities_by_state.setdefault(state_name, []).append(city_name)
+        for row in state_city_counts:
+            cities_by_state.setdefault(row["state"], []).append((row["city"], row["count"]))
     categories = (
         Lead.objects.order_by("primary_category_name")
         .values_list("primary_category_name", flat=True)
