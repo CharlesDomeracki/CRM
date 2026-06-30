@@ -132,6 +132,11 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <div class="flex items-center gap-2 pt-6">
+                        <input type="checkbox" name="in_mall" id="in_mall" {% if lead.in_mall %}checked{% endif %}
+                               class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        <label for="in_mall" class="text-sm font-medium text-slate-700">Located in a mall</label>
+                    </div>
                 </div>
             </section>
 

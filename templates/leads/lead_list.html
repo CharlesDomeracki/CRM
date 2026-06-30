@@ -134,6 +134,11 @@
                 <option value="yes" {% if has_phone == "yes" %}selected{% endif %}>Has phone on file</option>
                 <option value="no" {% if has_phone == "no" %}selected{% endif %}>Missing phone</option>
             </select>
+            <select name="in_mall" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:border-indigo-400 transition">
+                <option value="">Mall status</option>
+                <option value="yes" {% if in_mall == "yes" %}selected{% endif %}>In a mall</option>
+                <option value="no" {% if in_mall == "no" %}selected{% endif %}>Not in a mall</option>
+            </select>
             <div class="filter-dropdown" id="category-dropdown">
                 <button type="button" class="toggle min-w-[140px] text-left rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:border-indigo-400 transition" id="category-toggle">
                     {% if categories_selected %}{{ categories_selected|length }} categor{{ categories_selected|length|pluralize:"y,ies" }} selected{% else %}All categories{% endif %}

@@ -62,6 +62,12 @@ def lead_list(request):
     elif has_phone == "no":
         leads = leads.filter(phone="")
 
+    in_mall = request.GET.get("in_mall", "").strip()
+    if in_mall == "yes":
+        leads = leads.filter(in_mall=True)
+    elif in_mall == "no":
+        leads = leads.filter(in_mall=False)
+
     sort = request.GET.get("sort", "").strip()
     if sort == "rating":
         leads = leads.order_by("star_count")
@@ -93,7 +99,7 @@ def lead_list(request):
     page_obj = paginator.get_page(page_number)
 
     detail_link_qs = urlencode(
-        [("q", query), ("sort", sort), ("page", page_obj.number), ("has_email", has_email), ("has_website", has_website), ("has_phone", has_phone)]
+        [("q", query), ("sort", sort), ("page", page_obj.number), ("has_email", has_email), ("has_website", has_website), ("has_phone", has_phone), ("in_mall", in_mall)]
         + [("status_filter", s) for s in statuses_selected]
         + [("state_filter", s) for s in states_selected]
         + [("city_filter", c) for c in cities_selected]
@@ -101,7 +107,7 @@ def lead_list(request):
         + [("rating", r) for r in ratings_selected]
     )
     filters_qs = urlencode(
-        [("q", query), ("has_email", has_email), ("has_website", has_website), ("has_phone", has_phone)]
+        [("q", query), ("has_email", has_email), ("has_website", has_website), ("has_phone", has_phone), ("in_mall", in_mall)]
         + [("status", s) for s in statuses_selected]
         + [("state", s) for s in states_selected]
         + [("city", c) for c in cities_selected]
@@ -109,7 +115,7 @@ def lead_list(request):
         + [("rating", r) for r in ratings_selected]
     )
     pagination_qs = urlencode(
-        [("q", query), ("sort", sort), ("has_email", has_email), ("has_website", has_website), ("has_phone", has_phone)]
+        [("q", query), ("sort", sort), ("has_email", has_email), ("has_website", has_website), ("has_phone", has_phone), ("in_mall", in_mall)]
         + [("status", s) for s in statuses_selected]
         + [("state", s) for s in states_selected]
         + [("city", c) for c in cities_selected]
@@ -136,6 +142,7 @@ def lead_list(request):
             "has_email": has_email,
             "has_website": has_website,
             "has_phone": has_phone,
+            "in_mall": in_mall,
             "states": [s for s in states if s],
             "cities_by_state": cities_by_state,
             "categories": [c for c in categories if c],
@@ -207,6 +214,7 @@ def lead_detail(request, pk):
         lead.friday_hours = request.POST.get("friday_hours", "").strip()
         lead.saturday_hours = request.POST.get("saturday_hours", "").strip()
         lead.sunday_hours = request.POST.get("sunday_hours", "").strip()
+        lead.in_mall = request.POST.get("in_mall") == "on"
         lead.facebook_link = request.POST.get("facebook_link", "").strip()
         lead.instagram_link = request.POST.get("instagram_link", "").strip()
         lead.twitter_link = request.POST.get("twitter_link", "").strip()
@@ -449,6 +457,7 @@ def lead_create(request):
                 status=request.POST.get("status", "new"),
                 conversion_rating=request.POST.get("conversion_rating", "not_contacted"),
                 notes=request.POST.get("notes", "").strip(),
+                in_mall=request.POST.get("in_mall") == "on",
             )
             return redirect("leads:detail", pk=lead.pk)
         return render(

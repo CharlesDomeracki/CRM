@@ -26,6 +26,7 @@
                 <th class="px-4 py-3">Email</th>
                 <th class="px-4 py-3">Website</th>
                 <th class="px-4 py-3">Category</th>
+                <th class="px-4 py-3">In Mall</th>
                 <th class="px-4 py-3">Status</th>
                 <th class="px-4 py-3">Rating</th>
                 <th class="px-4 py-3">Contact Date</th>
@@ -46,6 +47,7 @@
                 <td class="px-4 py-3 text-slate-600">{% if lead.email %}Yes{% else %}No{% endif %}</td>
                 <td class="px-4 py-3 text-slate-600">{% if lead.url %}Yes{% else %}No{% endif %}</td>
                 <td class="px-4 py-3 text-slate-600">{{ lead.primary_category_name }}</td>
+                <td class="px-4 py-3 text-slate-600">{% if lead.in_mall %}Yes{% else %}No{% endif %}</td>
                 <td class="px-4 py-3"><span class="badge {{ lead.status }}">{{ lead.get_status_display }}</span></td>
                 <td class="px-4 py-3"><span class="rating-text rating-{{ lead.conversion_rating }}">{{ lead.get_conversion_rating_display }}</span></td>
                 <td class="px-4 py-3 text-slate-600">{{ lead.contact_date|default:"" }}</td>

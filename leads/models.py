@@ -50,6 +50,8 @@ class Lead(models.Model):
     contact_date = models.DateField(null=True, blank=True)
     followup_date = models.DateField(null=True, blank=True)
 
+    in_mall = models.BooleanField(default=False)
+
     monday_hours = models.CharField(max_length=100, blank=True)
     tuesday_hours = models.CharField(max_length=100, blank=True)
     wednesday_hours = models.CharField(max_length=100, blank=True)

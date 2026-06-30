@@ -90,6 +90,11 @@
                 <label for="notes" class="block text-sm font-medium text-slate-700 mb-1">Notes</label>
                 <textarea name="notes" id="notes" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">{{ form_data.notes }}</textarea>
             </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" name="in_mall" id="in_mall" {% if form_data.in_mall %}checked{% endif %}
+                       class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                <label for="in_mall" class="text-sm font-medium text-slate-700">Located in a mall</label>
+            </div>
             <button type="submit" class="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition">Create lead</button>
         </form>
     </div>
